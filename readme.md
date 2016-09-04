@@ -1,21 +1,22 @@
-# conf [![Build Status: Linux and macOS](https://travis-ci.org/sindresorhus/conf.svg?branch=master)](https://travis-ci.org/sindresorhus/conf) [![Build status: Windows](https://ci.appveyor.com/api/projects/status/n88jwh3aju39i0p2/branch/master?svg=true)](https://ci.appveyor.com/project/sindresorhus/conf/branch/master)
+# conf [![Build Status: Linux and macOS](https://travis-ci.org/dawsonbotsford/conf.svg?branch=master)](https://travis-ci.org/dawsonbotsford/conf)
+
+> Hard fork of sindresorhus's "conf" in order to remove dot props
 
 > Simple config handling for your app or module
 
 All you have to care about is what to persist. This module will handle all the dull details like where and how.
 
-
 ## Install
 
 ```
-$ npm install --save conf
+$ npm install --save dotless-conf
 ```
 
 
 ## Usage
 
 ```js
-const Conf = require('conf');
+const Conf = require('dotless-conf');
 const config = new Conf();
 
 config.set('unicorn', '🦄');
@@ -32,8 +33,24 @@ console.log(config.get('unicorn'));
 //=> undefined
 ```
 
-Or [create a subclass](https://github.com/sindresorhus/electron-config/blob/master/index.js).
+## Why diverge from conf?
 
+When reading and writing an object to a file, you don't always want to support nested object properties
+
+```js
+// with "conf"
+// use dot-notation to access nested properties
+config.set('foo.bar', true);
+console.log(config.get('foo'));
+//=> {bar: true}
+
+// with "dotless-conf"
+config.set('foo.bar', true);
+console.log(config.get('foo'));
+//=> undefined
+console.log(config.get('foo.bar'));
+//=> true
+```
 
 ## API
 
@@ -68,7 +85,7 @@ You only need to specify this if you don't have a package.json file in your proj
 #### cwd
 
 Type: `string`<br>
-Default: System default [user config directory](https://github.com/sindresorhus/env-paths#pathsconfig)
+Default: System default [user config directory](https://github.com/dawsonbotsford/env-paths#pathsconfig)
 
 **You most likely don't need this.**
 
@@ -77,8 +94,6 @@ Overrides `projectName`.
 The only use-case I can think of is having the config located in the app directory or on some external storage.
 
 ### Instance
-
-You can use [dot-notation](https://github.com/sindresorhus/dot-prop) in a `key` to access nested properties.
 
 The instance is [`iterable`](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Iteration_protocols) so you can use it directly in a [`for…of`](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Statements/for...of) loop.
 
@@ -124,20 +139,10 @@ conf.store = {
 
 Get the path to the config file.
 
-
-
-## FAQ
-
-### How is this different from [`configstore`](https://github.com/yeoman/configstore)?
-
-I'm also the author of `configstore`. While it's pretty good, I did make some mistakes early on that are hard to change at this point. This module is the result of everything I learned from making `configstore`. Mainly where config is stored. In `configstore`, the config is stored in `~/.config` (which is mainly a Linux convention) on all systems, while `conf` stores config in the system default [user config directory](https://github.com/sindresorhus/env-paths#pathsconfig). The `~/.config` directory, it turns out, often have an incorrect permission on macOS and Windows, which has caused a lot of grief for users.
-
-
 ## Related
 
-- [electron-config](https://github.com/sindresorhus/electron-config) - Simple config handling for your Electron app or module
-
+- [conf](https://github.com/sindresorhus/conf)
 
 ## License
 
-MIT © [Sindre Sorhus](https://sindresorhus.com)
+MIT © [Dawson Botsford](https://dawsonbotsford.com)

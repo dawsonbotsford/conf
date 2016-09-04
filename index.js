@@ -1,7 +1,6 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const dotProp = require('dot-prop');
 const mkdirp = require('mkdirp');
 const pkgUp = require('pkg-up');
 const envPaths = require('env-paths');
@@ -37,27 +36,27 @@ class Conf {
 		this.store = Object.assign(obj(), opts.defaults, this.store);
 	}
 	get(key) {
-		return dotProp.get(this.store, key);
+		return this.store[key];
 	}
 	set(key, val) {
 		const store = this.store;
 
 		if (val === undefined) {
 			Object.keys(key).forEach(k => {
-				dotProp.set(store, k, key[k]);
+				store[k] = key[k];
 			});
 		} else {
-			dotProp.set(store, key, val);
+			store[key] = val;
 		}
 
 		this.store = store;
 	}
 	has(key) {
-		return dotProp.has(this.store, key);
+		return Boolean(this.store[key]);
 	}
 	delete(key) {
 		const store = this.store;
-		dotProp.delete(store, key);
+		delete store[key];
 		this.store = store;
 	}
 	clear() {
@@ -89,7 +88,6 @@ class Conf {
 
 		fs.writeFileSync(this.path, JSON.stringify(val, null, '\t'));
 	}
-	// TODO: use `Object.entries()` here at some point
 	* [Symbol.iterator]() {
 		const store = this.store;
 

@@ -1,13 +1,13 @@
 {
-  "name": "conf",
-  "version": "0.11.2",
-  "description": "Simple config handling for your app or module",
+  "name": "dotless-conf",
+  "version": "0.0.0",
+  "description": "Simple dotless config handling for your app or module",
   "license": "MIT",
-  "repository": "sindresorhus/conf",
+  "repository": "dawsonbotsford/conf",
   "author": {
-    "name": "Sindre Sorhus",
-    "email": "sindresorhus@gmail.com",
-    "url": "sindresorhus.com"
+    "name": "Dawson Botsford",
+    "email": "dawsonbotsford@gmail.com",
+    "url": "dawsonbotsford.com"
   },
   "scripts": {
     "test": "xo && ava"
@@ -34,7 +34,6 @@
     "write"
   ],
   "dependencies": {
-    "dot-prop": "^3.0.0",
     "env-paths": "^0.3.0",
     "mkdirp": "^0.5.1",
     "pkg-up": "^1.0.0"

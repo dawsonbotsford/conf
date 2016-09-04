@@ -24,25 +24,6 @@ test('.set()', t => {
 	t.is(t.context.conf.get('baz.boo'), fixture);
 });
 
-test('.set() with object', t => {
-	t.context.conf.set({
-		foo1: 'bar1',
-		foo2: 'bar2',
-		baz: {
-			boo: 'foo',
-			foo: {
-				bar: 'baz'
-			}
-		}
-	});
-	t.is(t.context.conf.get('foo1'), 'bar1');
-	t.is(t.context.conf.get('foo2'), 'bar2');
-	t.deepEqual(t.context.conf.get('baz'), {boo: 'foo', foo: {bar: 'baz'}});
-	t.is(t.context.conf.get('baz.boo'), 'foo');
-	t.deepEqual(t.context.conf.get('baz.foo'), {bar: 'baz'});
-	t.is(t.context.conf.get('baz.foo.bar'), 'baz');
-});
-
 test('.has()', t => {
 	t.context.conf.set('foo', fixture);
 	t.context.conf.set('baz.boo', fixture);
@@ -55,17 +36,10 @@ test('.delete()', t => {
 	const conf = t.context.conf;
 	conf.set('foo', 'bar');
 	conf.set('baz.boo', true);
-	conf.set('baz.foo.bar', 'baz');
 	conf.delete('foo');
 	t.is(conf.get('foo'), undefined);
 	conf.delete('baz.boo');
 	t.not(conf.get('baz.boo'), true);
-	conf.delete('baz.foo');
-	t.not(conf.get('baz.foo'), {bar: 'baz'});
-	conf.set('foo.bar.baz', {awesome: 'icecream'});
-	conf.set('foo.bar.zoo', {awesome: 'redpanda'});
-	conf.delete('foo.bar.baz');
-	t.is(conf.get('foo.bar.zoo.awesome'), 'redpanda');
 });
 
 test('.clear()', t => {
@@ -85,22 +59,9 @@ test('.store', t => {
 	t.context.conf.set('foo', 'bar');
 	t.context.conf.set('baz.boo', true);
 	t.deepEqual(t.context.conf.store, {
-		foo: 'bar',
-		baz: {
-			boo: true
-		}
+		'foo': 'bar',
+		'baz.boo': true
 	});
-});
-
-test('`defaults` option', t => {
-	const conf = new Conf({
-		cwd: tempfile(),
-		defaults: {
-			foo: 'bar'
-		}
-	});
-
-	t.is(conf.get('foo'), 'bar');
 });
 
 test('`configName` option', t => {
