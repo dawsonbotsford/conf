@@ -1,4 +1,4 @@
-# dotless-conf [![Build Status: Linux and macOS](https://travis-ci.org/dawsonbotsford/dotless-conf.svg?branch=master)](https://travis-ci.org/dawsonbotsford/dotless-conf)
+# dotless-conf [![Build Status: Linux and macOS](https://travis-ci.org/dawsbot/dotless-conf.svg?branch=master)](https://travis-ci.org/dawsbot/dotless-conf)
 
 > Hard fork of sindresorhus's "conf" in order to remove dot props
 
