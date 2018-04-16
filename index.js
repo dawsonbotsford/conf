@@ -1,95 +1,149 @@
 'use strict';
 const fs = require('fs');
 const path = require('path');
-const mkdirp = require('mkdirp');
+const assert = require('assert');
+const EventEmitter = require('events');
+const makeDir = require('make-dir');
 const pkgUp = require('pkg-up');
 const envPaths = require('env-paths');
+const writeFileAtomic = require('write-file-atomic');
 
-const obj = () => Object.create(null);
+const plainObject = () => Object.create(null);
 
-// prevent caching of this module so module.parent is always accurate
+// Prevent caching of this module so module.parent is always accurate
 delete require.cache[__filename];
-const parentDir = path.dirname(module.parent.filename);
+const parentDir = path.dirname((module.parent && module.parent.filename) || '.');
 
 class Conf {
-	constructor(opts) {
+	constructor(options) {
 		const pkgPath = pkgUp.sync(parentDir);
 
-		opts = Object.assign({
-			// if the package.json was not found, avoid breaking with `require(null)`
-			projectName: pkgPath && require(pkgPath).name
-		}, opts);
+		options = Object.assign({
+			// Can't use `require` because of Webpack being annoying:
+			// https://github.com/webpack/webpack/issues/196
+			projectName: pkgPath && JSON.parse(fs.readFileSync(pkgPath, 'utf8')).name
+		}, options);
 
-		if (!opts.projectName && !opts.cwd) {
+		if (!options.projectName && !options.cwd) {
 			throw new Error('Project name could not be inferred. Please specify the `projectName` option.');
 		}
 
-		opts = Object.assign({
+		options = Object.assign({
 			configName: 'config'
-		}, opts);
+		}, options);
 
-		if (!opts.cwd) {
-			opts.cwd = envPaths(opts.projectName).config;
+		if (!options.cwd) {
+			options.cwd = envPaths(options.projectName).config;
 		}
 
-		this.path = path.resolve(opts.cwd, `${opts.configName}.json`);
-		this.store = Object.assign(obj(), opts.defaults, this.store);
+		this.events = new EventEmitter();
+		this.path = path.resolve(options.cwd, `${options.configName}.json`);
+		this.store = Object.assign(plainObject(), options.defaults, this.store);
 	}
-	get(key) {
-		return this.store[key];
-	}
-	set(key, val) {
-		const store = this.store;
 
-		if (val === undefined) {
-			Object.keys(key).forEach(k => {
+	get(key, defaultValue) {
+		return (this.store)[key] || defaultValue;
+	}
+
+	set(key, value) {
+		if (typeof key !== 'string') {
+			throw new TypeError(`Expected \`key\` to be of type \`string\`, got ${typeof key}`);
+		}
+
+		if (value === undefined) {
+			throw new TypeError('Use `delete()` to clear values');
+		}
+
+		const {store} = this;
+
+		if (typeof key === 'object') {
+			for (const k of Object.keys(key)) {
 				store[k] = key[k];
-			});
+			}
 		} else {
-			store[key] = val;
+			store[key] = value;
 		}
 
 		this.store = store;
 	}
+
 	has(key) {
-		return Boolean(this.store[key]);
+		return this.store[key] !== undefined;
 	}
+
 	delete(key) {
-		const store = this.store;
+		const {store} = this;
 		delete store[key];
 		this.store = store;
 	}
+
 	clear() {
-		this.store = obj();
+		this.store = plainObject();
 	}
+
+	onDidChange(key, callback) {
+		if (typeof key !== 'string') {
+			throw new TypeError(`Expected \`key\` to be of type \`string\`, got ${typeof key}`);
+		}
+
+		if (typeof callback !== 'function') {
+			throw new TypeError(`Expected \`callback\` to be of type \`function\`, got ${typeof callback}`);
+		}
+
+		let currentValue = this.get(key);
+
+		const onChange = () => {
+			const oldValue = currentValue;
+			const newValue = this.get(key);
+
+			try {
+				// TODO: Use `util.isDeepStrictEqual` when targeting Node.js 10
+				assert.deepEqual(newValue, oldValue);
+			} catch (_) {
+				currentValue = newValue;
+				callback.call(this, newValue, oldValue);
+			}
+		};
+
+		this.events.on('change', onChange);
+		return () => this.events.removeListener('change', onChange);
+	}
+
 	get size() {
 		return Object.keys(this.store).length;
 	}
+
 	get store() {
 		try {
-			return Object.assign(obj(), JSON.parse(fs.readFileSync(this.path, 'utf8')));
-		} catch (err) {
-			if (err.code === 'ENOENT') {
-				mkdirp.sync(path.dirname(this.path));
-				return obj();
+			const data = fs.readFileSync(this.path, 'utf8');
+			return Object.assign(plainObject(), JSON.parse(data));
+		} catch (error) {
+			if (error.code === 'ENOENT') {
+				makeDir.sync(path.dirname(this.path));
+				return plainObject();
 			}
 
-			if (err.name === 'SyntaxError') {
-				return obj();
+			if (error.name === 'SyntaxError') {
+				return plainObject();
 			}
 
-			throw err;
+			throw error;
 		}
 	}
-	set store(val) {
-		// ensure the directory exists as it
-		// could have been deleted in the meantime
-		mkdirp.sync(path.dirname(this.path));
 
-		fs.writeFileSync(this.path, JSON.stringify(val, null, '\t'));
+	set store(value) {
+		// Ensure the directory exists as it could have been deleted in the meantime
+		makeDir.sync(path.dirname(this.path));
+
+		const data = JSON.stringify(value, null, '\t');
+
+		writeFileAtomic.sync(this.path, data);
+		this.events.emit('change');
 	}
+
+	// TODO: Use `Object.entries()` when targeting Node.js 8
 	* [Symbol.iterator]() {
-		const store = this.store;
+		const {store} = this;
 
 		for (const key of Object.keys(store)) {
 			yield [key, store[key]];
