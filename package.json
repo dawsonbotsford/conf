@@ -1,6 +1,6 @@
 {
   "name": "dotless-conf",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Simple dotless config handling for your app or module",
   "license": "MIT",
   "repository": "dawsonbotsford/conf",
