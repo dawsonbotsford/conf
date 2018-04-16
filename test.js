@@ -3,7 +3,7 @@ import {serial as test} from 'ava';
 import tempfile from 'tempfile';
 import del from 'del';
 import pkgUp from 'pkg-up';
-import Conf from './';
+import Conf from '.';
 
 const fixture = '🦄';
 
@@ -59,7 +59,7 @@ test('.store', t => {
 	t.context.conf.set('foo', 'bar');
 	t.context.conf.set('baz.boo', true);
 	t.deepEqual(t.context.conf.store, {
-		'foo': 'bar',
+		foo: 'bar',
 		'baz.boo': true
 	});
 });

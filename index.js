@@ -7,7 +7,7 @@ const envPaths = require('env-paths');
 
 const obj = () => Object.create(null);
 
-// prevent caching of this module so module.parent is always accurate
+// Prevent caching of this module so module.parent is always accurate
 delete require.cache[__filename];
 const parentDir = path.dirname(module.parent.filename);
 
@@ -16,7 +16,7 @@ class Conf {
 		const pkgPath = pkgUp.sync(parentDir);
 
 		opts = Object.assign({
-			// if the package.json was not found, avoid breaking with `require(null)`
+			// If the package.json was not found, avoid breaking with `require(null)`
 			projectName: pkgPath && require(pkgPath).name
 		}, opts);
 
@@ -35,9 +35,11 @@ class Conf {
 		this.path = path.resolve(opts.cwd, `${opts.configName}.json`);
 		this.store = Object.assign(obj(), opts.defaults, this.store);
 	}
+
 	get(key) {
 		return this.store[key];
 	}
+
 	set(key, val) {
 		const store = this.store;
 
@@ -51,20 +53,25 @@ class Conf {
 
 		this.store = store;
 	}
+
 	has(key) {
 		return Boolean(this.store[key]);
 	}
+
 	delete(key) {
 		const store = this.store;
 		delete store[key];
 		this.store = store;
 	}
+
 	clear() {
 		this.store = obj();
 	}
+
 	get size() {
 		return Object.keys(this.store).length;
 	}
+
 	get store() {
 		try {
 			return Object.assign(obj(), JSON.parse(fs.readFileSync(this.path, 'utf8')));
@@ -81,13 +88,15 @@ class Conf {
 			throw err;
 		}
 	}
+
 	set store(val) {
-		// ensure the directory exists as it
+		// Ensure the directory exists as it
 		// could have been deleted in the meantime
 		mkdirp.sync(path.dirname(this.path));
 
 		fs.writeFileSync(this.path, JSON.stringify(val, null, '\t'));
 	}
+
 	* [Symbol.iterator]() {
 		const store = this.store;
 
